@@ -1,6 +1,8 @@
 package com.example.ecommerce_project.model;
 
 import com.example.ecommerce_project.constants.OrderStatus;
+import com.example.ecommerce_project.constants.PaymentMethod;
+import com.example.ecommerce_project.constants.PaymentStatus;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
@@ -23,10 +25,21 @@ public class Order {
 
     private String userEmail;
 
+    private String companyName;
+    private String taxId;
+    private String companyAddress;
+
     private BigDecimal totalAmount;
 
     @Enumerated(EnumType.STRING)
     private OrderStatus status;
+
+    @Enumerated(EnumType.STRING)
+    private PaymentMethod paymentMethod;
+
+    @Enumerated(EnumType.STRING)
+    @Builder.Default
+    private PaymentStatus paymentStatus = PaymentStatus.PENDING;;
 
     private LocalDateTime createdAt;
 
@@ -35,4 +48,6 @@ public class Order {
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonManagedReference
     private List<OrderItem> orderItems;
+
+
 }

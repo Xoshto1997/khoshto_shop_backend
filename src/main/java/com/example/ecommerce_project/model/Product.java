@@ -5,6 +5,9 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Data
 @AllArgsConstructor
@@ -15,9 +18,14 @@ public class Product {
     private Long id;
     private String productName;
     private Double price;
+
+    @Column(length = 2000)
     private String description;
 
-    @Lob
-    @Column(name="image_data", length = 1000000)
-    private byte[] imageData;
+    private String coverImage;
+
+    @ElementCollection
+    @CollectionTable(name = "product_carousel_images", joinColumns = @JoinColumn(name = "product_id"))
+    @Column(name = "image_url")
+    private List<String> carouselImages = new ArrayList<>();
 }

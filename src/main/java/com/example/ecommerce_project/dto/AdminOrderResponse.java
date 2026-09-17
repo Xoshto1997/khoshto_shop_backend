@@ -10,6 +10,11 @@ import java.util.List;
 public class AdminOrderResponse {
     private Long id;
     private String userEmail;
+
+    private String companyName;
+    private String taxId;
+    private String companyAddress;
+
     private BigDecimal totalAmount;
     private OrderStatus status;
     private LocalDateTime createdAt;
@@ -19,5 +24,6 @@ public class AdminOrderResponse {
     public static class AdminOrderItemDto {
         private String productName;
         private Integer quantity;
+        private BigDecimal price;
     }
 }

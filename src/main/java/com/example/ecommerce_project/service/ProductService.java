@@ -1,5 +1,7 @@
 package com.example.ecommerce_project.service;
 
+import com.cloudinary.Cloudinary;
+import com.cloudinary.utils.ObjectUtils;
 import com.example.ecommerce_project.model.Product;
 import com.example.ecommerce_project.repository.ProductRepository;
 import lombok.AllArgsConstructor;
@@ -7,18 +9,20 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @AllArgsConstructor
 @Service
 public class ProductService {
 
     private final ProductRepository productRepository;
+    private final Cloudinary cloudinary;
 
     public Product add(Product product) {
         return productRepository.save(product);
     }
-
 
     public void delete(Long prodId) {
         productRepository.deleteById(prodId);
@@ -33,16 +37,59 @@ public class ProductService {
                 .orElseThrow(() -> new RuntimeException("პროდუქტი ID-ით: " + id + " ვერ მოიძებნა!"));
     }
 
-    public Product saveProductWithImage(String name, Double price, String description, MultipartFile file) throws IOException {
+    public Product saveProductWithImages(
+            String name,
+            Double price,
+            String description,
+            MultipartFile coverFile,
+            List<MultipartFile> carouselFiles
+    ) throws IOException {
+
         Product product = new Product();
         product.setProductName(name);
         product.setPrice(price);
         product.setDescription(description);
 
-        if (file != null && !file.isEmpty()) {
-            product.setImageData(file.getBytes());
+        if (coverFile != null && !coverFile.isEmpty()) {
+            String coverUrl = uploadImageToCloudinary(coverFile);
+            product.setCoverImage(coverUrl);
+        }
+
+        if (carouselFiles != null && !carouselFiles.isEmpty()) {
+            List<String> carouselUrls = new ArrayList<>();
+            int limit = Math.min(carouselFiles.size(), 3);
+
+            for (int i = 0; i < limit; i++) {
+                MultipartFile file = carouselFiles.get(i);
+                if (file != null && !file.isEmpty()) {
+                    String imgUrl = uploadImageToCloudinary(file);
+                    if (imgUrl != null) {
+                        carouselUrls.add(imgUrl);
+                    }
+                }
+            }
+            product.setCarouselImages(carouselUrls);
         }
 
         return productRepository.save(product);
+    }
+
+    public Product saveProductWithImage(String name, Double price, String description, MultipartFile file) throws IOException {
+        return saveProductWithImages(name, price, description, file, null);
+    }
+
+    private String uploadImageToCloudinary(MultipartFile file) throws IOException {
+        if (file == null || file.isEmpty()) {
+            return null;
+        }
+
+        Map<?, ?> uploadResult = cloudinary.uploader().upload(
+                file.getBytes(),
+                ObjectUtils.asMap("resource_type", "auto")
+        );
+
+        return uploadResult.get("secure_url") != null
+                ? uploadResult.get("secure_url").toString()
+                : uploadResult.get("url").toString();
     }
 }
