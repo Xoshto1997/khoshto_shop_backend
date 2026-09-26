@@ -67,7 +67,6 @@ public class AuthController {
             @Valid @RequestBody ChangePasswordRequest request,
             Principal principal
     ) {
-        // 1. შევამოწმოთ არის თუ არა იუზერი ავტორიზებული
         if (principal == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(Map.of("error", "მომხმარებელი არ არის ავტორიზებული!"));
@@ -79,7 +78,6 @@ public class AuthController {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
-            // 💡 დაბეჭდე ერორი კონსოლში, რომ ზუსტად იცოდე რა გაფუჭდა
             e.printStackTrace();
             return ResponseEntity.internalServerError().body(Map.of("error", "შეცდომა პაროლის შეცვლისას: " + e.getMessage()));
         }

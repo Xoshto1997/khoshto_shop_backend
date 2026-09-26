@@ -64,10 +64,11 @@ public class AuthService {
         boolean isMfaActive = Boolean.TRUE.equals(user.getMfaEnabled());
 
         if (isMfaActive || user.getRole() == Role.ADMIN) {
-
             if (!isMfaActive) {
                 String secret = user.getMfaSecret();
-                if (secret == null || secret.isEmpty()) {
+
+                // 💡 მხოლოდ მაშინ დააგენერიროს, თუ ბაზაში საერთოდ არ არსებობს
+                if (secret == null || secret.trim().isEmpty()) {
                     secret = mfaService.generateSecretKey();
                     user.setMfaSecret(secret);
                     userRepository.save(user);
@@ -106,6 +107,7 @@ public class AuthService {
             throw new IllegalArgumentException("MFA Secret ვერ მოიძებნა!");
         }
 
+        // 💡 დავუბრუნდეთ მხოლოდ რეალურ TOTP ვალიდაციას
         boolean isValid = mfaService.isCodeValid(user.getMfaSecret(), code);
 
         if (!isValid) {

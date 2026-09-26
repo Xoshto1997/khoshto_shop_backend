@@ -39,13 +39,31 @@ public class MfaService {
 
     public boolean isCodeValid(String secret, String code) {
         if (secret == null || code == null) {
+            System.out.println("=== MFA DEBUG: Secret ან Code არის NULL ===");
             return false;
         }
+
+
 
         TimeProvider timeProvider = new SystemTimeProvider();
         CodeGenerator codeGenerator = new DefaultCodeGenerator();
         CodeVerifier verifier = new DefaultCodeVerifier(codeGenerator, timeProvider);
 
-        return verifier.isValidCode(secret, code);
+        boolean isValid = verifier.isValidCode(secret, code);
+
+        if (!isValid) {
+            long currentTime = timeProvider.getTime();
+
+            TimeProvider pastTimeProvider = () -> currentTime - 30;
+            CodeVerifier pastVerifier = new DefaultCodeVerifier(codeGenerator, pastTimeProvider);
+
+            TimeProvider futureTimeProvider = () -> currentTime + 30;
+            CodeVerifier futureVerifier = new DefaultCodeVerifier(codeGenerator, futureTimeProvider);
+
+            isValid = pastVerifier.isValidCode(secret, code) || futureVerifier.isValidCode(secret, code);
+        }
+
+
+        return isValid;
     }
 }

@@ -38,10 +38,12 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                        // 1. საჯარო ენდპოინტები (Public)
                         .requestMatchers(
                                 "/api/auth/login",
                                 "/api/auth/register",
+                                "/api/auth/verify-2fa",
+                                "/api/auth/setup-2fa",
+                                "/api/auth/enable-2fa",
                                 "/api/auth/forgot-password",
                                 "/api/auth/reset-password",
                                 "/v3/api-docs/**",
