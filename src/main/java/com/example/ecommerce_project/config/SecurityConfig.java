@@ -36,8 +36,13 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
+                        // 1. ყოველთვის დაუშვი Preflight (OPTIONS) მოთხოვნები
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
+                        // 🎯 დაემატა: მთავარი Root, static და Error გვერდები
+                        .requestMatchers("/", "/error", "/index.html", "/static/**", "/favicon.ico").permitAll()
+
+                        // 2. Auth & Public ენდპოინტები
                         .requestMatchers(
                                 "/api/auth/login",
                                 "/api/auth/register",
@@ -51,19 +56,21 @@ public class SecurityConfig {
                                 "/swagger-ui.html"
                         ).permitAll()
 
-                        // 2. 🆕 სპეციალურად პაროლის შეცვლისთვის: ნებისმიერი ავტორიზებული იუზერისთვის (USER ან ADMIN)
                         .requestMatchers("/api/auth/change-password").authenticated()
 
+                        // 3. Cart & Orders ენდპოინტები
+                        .requestMatchers("/api/cart/**").permitAll()
                         .requestMatchers("/api/orders/**").permitAll()
 
+                        // 4. Products & Reviews (GET)
                         .requestMatchers(HttpMethod.GET,
-                                "/api/product", "/api/product/", "/api/product/**",
-                                "/api/products", "/api/products/", "/api/products/**"
+                                "/api/product/**",
+                                "/api/products/**",
+                                "/api/reviews/**"
                         ).permitAll()
 
-                        .requestMatchers(HttpMethod.GET, "/api/reviews/**", "/api/reviews/product/**").permitAll()
-
-                        // ADMIN ენდპოინტები
+                        // 5. ADMIN ენდპოინტები
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/product/**", "/api/products/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/product/**", "/api/products/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PATCH, "/api/product/**", "/api/products/**").hasRole("ADMIN")
@@ -83,11 +90,23 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration corsConfig = new CorsConfiguration();
-        corsConfig.setAllowedOriginPatterns(List.of("*"));
+
+        // 🎯 დაემატა ახალი დომენები (3dstudio.ge)
+        corsConfig.setAllowedOrigins(List.of(
+                "https://3dstudio.ge",
+                "https://www.3dstudio.ge",
+                "http://3dstudio.ge",
+                "http://www.3dstudio.ge",
+                "https://khoshtoshopp.netlify.app",
+                "http://localhost:4200",
+                "http://localhost:8090"
+        ));
+
         corsConfig.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        corsConfig.setAllowedHeaders(List.of("*"));
-        corsConfig.setExposedHeaders(List.of("*"));
+        corsConfig.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Requested-With", "Accept", "Origin", "Access-Control-Request-Method", "Access-Control-Request-Headers"));
+        corsConfig.setExposedHeaders(List.of("Authorization", "Access-Control-Allow-Origin", "Access-Control-Allow-Credentials"));
         corsConfig.setAllowCredentials(true);
+        corsConfig.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", corsConfig);
