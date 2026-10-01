@@ -24,6 +24,17 @@ public class Product {
 
     private String coverImage;
 
+    @Column(nullable = false)
+    private boolean active = true;
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
+    }
+
     @ElementCollection
     @CollectionTable(name = "product_carousel_images", joinColumns = @JoinColumn(name = "product_id"))
     @Column(name = "image_url")

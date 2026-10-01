@@ -4,6 +4,7 @@ import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
 import com.example.ecommerce_project.model.Product;
 import com.example.ecommerce_project.repository.ProductRepository;
+import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -28,8 +29,14 @@ public class ProductService {
         return productRepository.save(product);
     }
 
-    public void delete(Long prodId) {
-        productRepository.deleteById(prodId);
+    @Transactional
+    public void delete(Long id) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Product not found with id: " + id));
+
+        // ფიზიკურად წაშლის ნაცვლად ვთიშავთ პროდუქტს
+        product.setActive(false);
+        productRepository.save(product);
     }
 
     public List<Product> getAllProducts() {
