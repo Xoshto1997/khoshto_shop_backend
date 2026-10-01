@@ -5,6 +5,10 @@ import com.cloudinary.utils.ObjectUtils;
 import com.example.ecommerce_project.model.Product;
 import com.example.ecommerce_project.repository.ProductRepository;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -32,9 +36,61 @@ public class ProductService {
         return productRepository.findAll();
     }
 
+    public Page<Product> getProductsPaginated(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
+        return productRepository.findAll(pageable);
+    }
+
     public Product getProductById(Long id) {
         return productRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("პროდუქტი ID-ით: " + id + " ვერ მოიძებნა!"));
+    }
+
+    public Product updateProduct(
+            Long id,
+            String productName,
+            Double price,
+            String description,
+            MultipartFile coverFile,
+            List<MultipartFile> carouselFiles
+    ) throws IOException {
+        // 1. იპოვე არსებული პროდუქტი
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("პროდუქტი ვერ მოიძებნა ID-ით: " + id));
+
+        // 2. განაახლე ტექსტური ველები
+        product.setProductName(productName);
+        product.setPrice(price);
+        product.setDescription(description);
+
+        // 3. თუ ახალი ქოვერ ფოტო აიტვირთა, ატვირთე Cloudinary-ზე და განაახლე URL
+        if (coverFile != null && !coverFile.isEmpty()) {
+            String coverImageUrl = uploadImageToCloudinary(coverFile);
+            product.setCoverImage(coverImageUrl);
+        }
+
+        // 4. თუ ახალი კარუსელის ფოტოები აიტვირთა, ატვირთე Cloudinary-ზე და ჩაანაცვლე
+        if (carouselFiles != null && !carouselFiles.isEmpty()) {
+            List<String> carouselUrls = new ArrayList<>();
+            int limit = Math.min(carouselFiles.size(), 3);
+
+            for (int i = 0; i < limit; i++) {
+                MultipartFile file = carouselFiles.get(i);
+                if (file != null && !file.isEmpty()) {
+                    String imgUrl = uploadImageToCloudinary(file);
+                    if (imgUrl != null) {
+                        carouselUrls.add(imgUrl);
+                    }
+                }
+            }
+            // მხოლოდ იმ შემთხვევაში ვაახლებთ, თუ რეალურად აიტვირთა ახალი ფოტოები
+            if (!carouselUrls.isEmpty()) {
+                product.setCarouselImages(carouselUrls);
+            }
+        }
+
+        // 5. შეინახე ბაზაში
+        return productRepository.save(product);
     }
 
     public Product saveProductWithImages(

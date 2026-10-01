@@ -7,7 +7,6 @@ import com.example.ecommerce_project.dto.DirectOrderRequest;
 import com.example.ecommerce_project.dto.OrderItemRequest;
 import com.example.ecommerce_project.model.Order;
 import com.example.ecommerce_project.service.OrderService;
-import com.stripe.exception.StripeException;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -17,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.data.domain.Page;
 
 import java.util.List;
 import java.util.Map;
@@ -29,6 +29,17 @@ import java.util.Map;
 public class OrderController {
 
     private final OrderService orderService;
+
+    @GetMapping("/admin/paged")
+    public ResponseEntity<Page<AdminOrderResponse>> getAdminOrdersPaged(
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) OrderStatus status,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        Page<AdminOrderResponse> ordersPage = orderService.getAdminOrdersPaged(search, status, page, size);
+        return ResponseEntity.ok(ordersPage);
+    }
 
     @PostMapping("/create-direct")
     public ResponseEntity<Order> createDirectOrder(@Valid @RequestBody DirectOrderRequest request) {
@@ -56,20 +67,7 @@ public class OrderController {
         return ResponseEntity.ok(updatedOrder);
     }
 
-    @PostMapping("/create-checkout-session")
-    public ResponseEntity<Map<String, String>> createCheckoutSession(
-            @RequestBody @NotEmpty(message = "კალათა არ უნდა იყოს ცარიელი") List<@Valid OrderItemRequest> cartItems,
-            @RequestParam @NotBlank(message = "ელფოსტის მითითება სავალდებულოა") @Email(message = "არასწორი ელფოსტის ფორმატი") String userEmail) {
 
-        try {
-            String stripeUrl = orderService.createOrderAndGetStripeUrl(cartItems, userEmail);
-            return ResponseEntity.ok(Map.of("url", stripeUrl));
-
-        } catch (StripeException e) {
-            e.printStackTrace();
-            return ResponseEntity.status(500).body(Map.of("error", "Stripe-თან კავშირი ჩავარდა: " + e.getMessage()));
-        }
-    }
 
     @GetMapping("/user/{email}")
     public ResponseEntity<List<Order>> getOrdersByUserEmail(

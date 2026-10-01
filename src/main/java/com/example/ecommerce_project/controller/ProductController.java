@@ -3,8 +3,10 @@ package com.example.ecommerce_project.controller;
 import com.example.ecommerce_project.model.Product;
 import com.example.ecommerce_project.service.ProductService;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -20,8 +22,25 @@ public class ProductController {
     private final ProductService productService;
 
     @GetMapping
-    public ResponseEntity<List<Product>> getAllProducts() {
-        return ResponseEntity.ok(productService.getAllProducts());
+    public ResponseEntity<Page<Product>> getAllProducts(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        return ResponseEntity.ok(productService.getProductsPaginated(page, size));
+    }
+
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Product> updateProductWithImages(
+            @PathVariable Long id,
+            @RequestParam("productName") String productName,
+            @RequestParam("price") Double price,
+            @RequestParam("description") String description,
+            @RequestParam(value = "coverImage", required = false) MultipartFile coverFile,
+            @RequestParam(value = "carouselImages", required = false) List<MultipartFile> carouselFiles
+    ) throws IOException {
+        Product updatedProduct = productService.updateProduct(id, productName, price, description, coverFile, carouselFiles);
+        return ResponseEntity.ok(updatedProduct);
     }
 
     @GetMapping("/{id}")
