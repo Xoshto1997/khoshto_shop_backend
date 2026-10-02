@@ -11,7 +11,6 @@ import com.example.ecommerce_project.model.OrderItem;
 import com.example.ecommerce_project.model.Product;
 import com.example.ecommerce_project.repository.OrderRepository;
 import com.example.ecommerce_project.repository.ProductRepository;
-import jakarta.annotation.PostConstruct;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -64,11 +63,18 @@ public class OrderService {
         return AdminOrderResponse.builder()
                 .id(order.getId())
                 .userEmail(order.getUserEmail())
+                .customerName(order.getCustomerName())
+                .phoneNumber(order.getPhoneNumber())
+                .city(order.getCity())
+                .address(order.getAddress())
+                .notes(order.getNotes())
                 .companyName(order.getCompanyName())
                 .taxId(order.getTaxId())
                 .companyAddress(order.getCompanyAddress())
                 .totalAmount(order.getTotalAmount())
                 .status(order.getStatus())
+                .paymentMethod(order.getPaymentMethod())
+                .paymentStatus(order.getPaymentStatus())
                 .createdAt(order.getCreatedAt())
                 .orderItems(itemsDto)
                 .build();
@@ -80,6 +86,11 @@ public class OrderService {
 
         Order order = Order.builder()
                 .userEmail(request.getUserEmail())
+                .customerName(request.getCustomerName())
+                .phoneNumber(request.getPhoneNumber())
+                .city(request.getCity())
+                .address(request.getAddress())
+                .notes(request.getNotes())
                 .companyName(request.getCompanyName())
                 .taxId(request.getTaxId())
                 .companyAddress(request.getCompanyAddress())

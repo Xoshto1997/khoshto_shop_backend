@@ -29,6 +29,12 @@ public class Order {
     private String taxId;
     private String companyAddress;
 
+    private String customerName;
+    private String phoneNumber;
+    private String city;
+    private String address;
+    private String notes;
+
     private BigDecimal totalAmount;
 
     @Enumerated(EnumType.STRING)
@@ -39,7 +45,7 @@ public class Order {
 
     @Enumerated(EnumType.STRING)
     @Builder.Default
-    private PaymentStatus paymentStatus = PaymentStatus.PENDING;;
+    private PaymentStatus paymentStatus = PaymentStatus.PENDING;
 
     private LocalDateTime createdAt;
 

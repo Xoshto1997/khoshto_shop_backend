@@ -14,6 +14,20 @@ public class DirectOrderRequest {
     @Email(message = "გთხოვთ მიუთითოთ ვალიდური ელფოსტის მისამართი")
     private String userEmail;
 
+    @NotBlank(message = "სახელი და გვარი სავალდებულოა")
+    private String customerName;
+
+    @NotBlank(message = "ტელეფონის ნომერი სავალდებულოა")
+    private String phoneNumber;
+
+    @NotBlank(message = "ქალაქი სავალდებულოა")
+    private String city;
+
+    @NotBlank(message = "მისამართი სავალდებულოა")
+    private String address;
+
+    private String notes;
+
     private String companyName;
     private String taxId;
     private String companyAddress;
